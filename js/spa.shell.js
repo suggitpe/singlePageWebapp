@@ -23,9 +23,14 @@ spa.shell = (function () {
             chatExtendTime: 300,
             chatRetractTime: 300,
             chatExtendHeight: 450,
-            chatRetractHeight: 15
+            chatRetractHeight: 15,
+            chatExtendedTitle: 'Click to retract',
+            chatRetractedTitle: 'Click to extract'
         },
-        stateMap = { $container: null },
+        stateMap = {
+            $container: null,
+            isChatRetracted: true
+        },
         jqueryMap = {},
 
         setJqueryMap,
@@ -40,7 +45,7 @@ spa.shell = (function () {
         };
     };
 
-    toggleChat = function (do_extend, callback) {
+    toggleChat = function (doExtend, callback) {
         var
             pxChatHeight = jqueryMap.$chat.height(),
             isOpen = pxChatHeight === configMap.chatExtendHeight,
@@ -51,11 +56,13 @@ spa.shell = (function () {
             return false;
         }
         // Begin extend chat slider
-        if (do_extend) {
+        if (doExtend) {
             jqueryMap.$chat.animate(
                 { height: configMap.chatExtendHeight },
                 configMap.chatExtendTime,
                 function () {
+                    jqueryMap.$chat.attr('title', configMap.chatExtendedTitle);
+                    stateMap.isChatRetracted = false;
                     if (callback) {
                         callback(jqueryMap.$chat);
                     }
@@ -69,6 +76,8 @@ spa.shell = (function () {
             { height: configMap.chatRetractHeight },
             configMap.chatRetractTime,
             function () {
+                jqueryMap.$chat.attr('title', configMap.chatRetractedTitle);
+                stateMap.isChatRetracted = true;
                 if (callback) {
                     callback(jqueryMap.$chat);
                 }
@@ -78,18 +87,20 @@ spa.shell = (function () {
         // End retract chat slider
     };
 
+    var onClickChat = function (event) {
+        toggleChat(stateMap.isChatRetracted);
+        return false;
+    };
+
     initModule = function ($container) {
         // load HTML and map jQuery collections
         stateMap.$container = $container;
         $container.html(configMap.main_html);
         setJqueryMap();
-        // test toggle
-        setTimeout(function () {
-            toggleChat(true);
-        }, 3000);
-        setTimeout(function () {
-            toggleChat(false);
-        }, 8000);
+
+        stateMap.isChatRetracted = true;
+        jqueryMap.$chat.attr('title', configMap.chatRetractedTitle).click(onClickChat);
+
     };
     // End PUBLIC method /initModule/
     return { initModule: initModule };
