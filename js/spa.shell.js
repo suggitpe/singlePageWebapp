@@ -36,7 +36,6 @@ spa.shell = (function () {
 
         copyAnchorMap,
         setJqueryMap,
-        toggleChat,
         changeAnchorPart,
         onHashChange,
         onClickChat,
@@ -52,46 +51,6 @@ spa.shell = (function () {
         jqueryMap = {
             $container: $container
         };
-    };
-
-    toggleChat = function (doExtend, callback) {
-        var
-            pxChatHeight = jqueryMap.$chat.height(),
-            isOpen = pxChatHeight === configMap.chatExtendHeight,
-            isClosed = pxChatHeight === configMap.chatRetractHeight,
-            isSliding = !isOpen && !isClosed;
-
-        if (isSliding) {
-            return false;
-        }
-
-        if (doExtend) {
-            jqueryMap.$chat.animate(
-                { height: configMap.chatExtendHeight },
-                configMap.chatExtendTime,
-                function () {
-                    jqueryMap.$chat.attr('title', configMap.chatExtendedTitle);
-                    stateMap.isChatRetracted = false;
-                    if (callback) {
-                        callback(jqueryMap.$chat);
-                    }
-                }
-            );
-            return true;
-        }
-
-        jqueryMap.$chat.animate(
-            { height: configMap.chatRetractHeight },
-            configMap.chatRetractTime,
-            function () {
-                jqueryMap.$chat.attr('title', configMap.chatRetractedTitle);
-                stateMap.isChatRetracted = true;
-                if (callback) {
-                    callback(jqueryMap.$chat);
-                }
-            }
-        );
-        return true;
     };
 
     changeAnchorPart = function (argMap) {

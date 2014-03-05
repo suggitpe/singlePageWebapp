@@ -61,7 +61,9 @@ spa.chat = (function () {
         setSliderPosition,
         onClickToggle,
         configModule,
-        initModule;
+        initModule,
+        removeSlider,
+        handleResize;
 
     setJqueryMap = function () {
         var $appendTarget = stateMap.$appendTarget,
@@ -178,10 +180,26 @@ spa.chat = (function () {
         return true;
     };
 
+    removeSlider = function () {
+        if (jqueryMap.$slider) {
+            jqueryMap.$slider.remove();
+            jqueryMap = {};
+        }
+        stateMap.$appendTarget = null;
+        stateMap.positionType = 'closed';
+        configMap.chatModel = null;
+        configMap.peopleModel = null;
+        configMap.setChatAnchor = null;
+
+        return true;
+    };
+
     return{
         setSliderPosition: setSliderPosition,
         configModule: configModule,
-        initModule: initModule
+        initModule: initModule,
+        removeSlider: removeSlider,
+        handleResize: handleResize
     };
 
 }());
