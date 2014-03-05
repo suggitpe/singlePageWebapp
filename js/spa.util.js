@@ -21,9 +21,9 @@ spa.util = (function () {
     };
 
     setConfigMap = function (argMap) {
-        var inputMap = argMap.input_map,
-            settableMap = argMap.settable_map,
-            configMap = argMap.config_map,
+        var inputMap = argMap.inputMap,
+            settableMap = argMap.settableMap,
+            configMap = argMap.configMap,
             keyName,
             error;
 
