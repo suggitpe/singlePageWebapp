@@ -38,7 +38,9 @@ spa.chat = (function () {
             },
             sliderOpenTime: 250,
             sliderCloseTime: 250,
-            sliderOpenedEm: 16,
+            sliderOpenedEm: 18,
+            sliderOpenedMinEm: 10,
+            windowHeightMinEm: 20,
             sliderClosedEm: 2,
             sliderOpenedTitle: 'Click to close',
             sliderClosedTitle: 'Click to open',
@@ -86,13 +88,17 @@ spa.chat = (function () {
 
     setPxSizes = function () {
         var pxPerEm,
+            windowHeightEm,
             openedHeightEm;
 
         pxPerEm = getEmSize(jqueryMap.$slider.get(0));
-        openedHeightEm = configMap.sliderOpenedEm;
+        windowHeightEm = Math.floor(($(window).height() / pxPerEm) + 0.5);
+        openedHeightEm = windowHeightEm > configMap.windowHeightMinEm ?
+            configMap.sliderOpenedEm :
+            configMap.sliderOpenedMinEm;
         stateMap.pxPerEm = pxPerEm;
         stateMap.sliderClosedPx = configMap.sliderClosedEm * pxPerEm;
-        stateMap.sliderOpenedPx = configMap.sliderOpenedEm * pxPerEm;
+        stateMap.sliderOpenedPx = openedHeightEm * pxPerEm;
         jqueryMap.$sizer.css({
             height: (openedHeightEm - 2) * pxPerEm
         });
@@ -190,6 +196,19 @@ spa.chat = (function () {
         configMap.chatModel = null;
         configMap.peopleModel = null;
         configMap.setChatAnchor = null;
+
+        return true;
+    };
+
+    handleResize = function () {
+        if (!jqueryMap.$slider) {
+            return false;
+        }
+
+        setPxSizes();
+        if (stateMap.positionType === 'opened') {
+            jqueryMap.$slider.css({height: stateMap.sliderOpenedPx});
+        }
 
         return true;
     };

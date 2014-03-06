@@ -27,10 +27,13 @@ spa.shell = (function () {
             chatExtendHeight: 450,
             chatRetractHeight: 15,
             chatExtendedTitle: 'Click to retract',
-            chatRetractedTitle: 'Click to extract'
+            chatRetractedTitle: 'Click to extract',
+            resizeInterval: 200
         },
         stateMap = {
-            anchorMap: {}
+            $container: undefined,
+            anchorMap: {},
+            resizeIdto: undefined
         },
         jqueryMap = {},
 
@@ -38,7 +41,7 @@ spa.shell = (function () {
         setJqueryMap,
         changeAnchorPart,
         onHashChange,
-        onClickChat,
+        onResize,
         setChatAnchor,
         initModule;
 
@@ -133,11 +136,15 @@ spa.shell = (function () {
         return false;
     };
 
-    onClickChat = function (event) {
-        changeAnchorPart({
-            chat: ( stateMap.isChatRetracted ? 'open' : 'closed' )
-        });
-        return false;
+    onResize = function () {
+        if (stateMap.resizeIdto) {
+            return true;
+        }
+        spa.chat.handleResize();
+
+        stateMap.resizeIdto = setTimeout(function () {
+            stateMap.resizeIdto = undefined;
+        }, configMap.resizeInterval);
     };
 
     setChatAnchor = function (positionType) {
@@ -162,6 +169,7 @@ spa.shell = (function () {
         spa.chat.initModule(jqueryMap.$container);
 
         $(window)
+            .bind('resize', onResize)
             .bind('hashchange', onHashChange)
             .trigger('hashchange');
 
