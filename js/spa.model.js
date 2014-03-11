@@ -10,12 +10,18 @@ spa.model = (function () {
     var configMap = {anonId: 'a0'},
         stateMap = {
             anonUser: null,
+            cidSerial: 0,
             peopleCidMap: {},
-            peopleDb: TAFFY()
+            peopleDb: TAFFY(),
+            user: null
         },
         isFakeData = true,
         personProto,
+        makeCid,
+        clearPeopleDb,
+        completeLogin,
         makePerson,
+        removePerson,
         people,
         initModule;
 
@@ -26,6 +32,31 @@ spa.model = (function () {
         isAnon: function () {
             return this.cid === stateMap.anonUser.cid;
         }
+    };
+
+    makeCid = function () {
+        return 'c' + String(stateMap.cidSerial++);
+    };
+
+    clearPeopleDb = function () {
+        var user = stateMap.user;
+        stateMap.peopleDb = TAFFY();
+        stateMap.peopleCidMap = {};
+        if (user) {
+            stateMap.peopleDb.insert(user);
+            stateMap.peopleCidMap[user.cid] = user;
+        }
+    };
+
+    completeLogin = function (userList) {
+        var userMap = userList[0];
+        delete stateMap.peopleCidMap[userMap.cid];
+        stateMap.user.cid = userMap.cid;
+        stateMap.user.id = userMap.id;
+        stateMap.user.cssMap = userMap.cssMap;
+        stateMap.peopleCidMap[userMap._id] = stateMap.user;
+
+        $.gevent.publish('spa-login', [stateMap.user]);
     };
 
     makePerson = function (personMap) {
@@ -52,14 +83,75 @@ spa.model = (function () {
         return person;
     };
 
-    people = {
-        getDb: function () {
-            return stateMap.peopleDb;
-        },
-        getCidMap: function () {
-            return stateMap.peopleCidMap;
+    removePerson = function (person) {
+        if (!person) {
+            return false;
         }
+
+        if (person.id === configMap.anonId) {
+            return false;
+        }
+
+        stateMap.peopleDb({cid: person.cid}).remove();
+        if (person.cid) {
+            delete stateMap.peopleCidMap[person.cid];
+        }
+        return true;
     };
+
+    people = (function () {
+        var getByCid,
+            getDb,
+            getUser,
+            login,
+            logout;
+
+        getByCid = function (cid) {
+            return stateMap.peopleCidMap[cid];
+        };
+
+        getDb = function () {
+            return stateMap.peopleDb;
+        };
+
+        getUser = function () {
+            return stateMap.user;
+        };
+
+        login = function (name) {
+            var sio = isFakeData ? spa.fake.mockSio : spa.data.getSio;
+            stateMap.user = makePerson({
+                cid: makeCid(),
+                cssMap: {top: 25, left: 25, 'background-color': '#8f8'},
+                name: name
+            });
+            sio.on('userupdate', completeLogin);
+
+            sio.emit('adduser', {
+                cid: stateMap.user.cid,
+                cssMap: stateMap.user.cssMap,
+                name: stateMap.user.name
+            });
+        };
+
+        logout = function () {
+            var isRemoved,
+                user = stateMap.user;
+            isRemoved = removePerson(user);
+            stateMap.user = stateMap.anonUser;
+
+            $.gevent.publish('spa-logout', [user]);
+            return isRemoved;
+        };
+
+        return{
+            getByCid: getByCid,
+            getDb: getDb,
+            getUser: getUser,
+            login: login,
+            logout: logout
+        };
+    }());
 
     initModule = function () {
         var i,
